@@ -170,5 +170,7 @@ fi
 
 # fix up config
 envsubst < config/$CFG_TEMPLATE > config/docker.yaml
-./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES
+#./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES
 echo "hahahahahhahahahah"
+echo $RINGPOP_SEEDS_JSON_ARRAY
+

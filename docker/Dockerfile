@@ -31,7 +31,7 @@ RUN go get -u golang.org/x/lint/golint
 
 # get and compile cadence-server
 #RUN git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence
-RUN git clone git@github.com:TeslaC-137/cadence.git /go/src/github.com/uber/cadence
+RUN git clone https://github.com/TeslaC-137/cadence.git /go/src/github.com/uber/cadence
 RUN cd /go/src/github.com/uber/cadence && git fetch && git checkout $git_branch && make bins_nothrift
 
 

@@ -163,10 +163,10 @@ init_env() {
 }
 
 init_env
-wait_for_db
-if [ "$SKIP_SCHEMA_SETUP" != true ]; then
-    setup_schema
-fi
+#wait_for_db
+#if [ "$SKIP_SCHEMA_SETUP" != true ]; then
+#    setup_schema
+#fi
 
 # fix up config
 envsubst < config/$CFG_TEMPLATE > config/docker.yaml

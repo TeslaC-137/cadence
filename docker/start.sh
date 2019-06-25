@@ -25,7 +25,8 @@ DB="${DB:-cassandra}"
 CFG_TEMPLATE=docker_template_$DB.yaml
 ENABLE_ES="${ENABLE_ES:-false}"
 ES_PORT="${ES_PORT:-9200}"
-SERVICES="${SERVICES:-history,matching,frontend,worker}"
+#SERVICES="${SERVICES:-history,matching,frontend,worker}"
+export SERVICES="frontend"
 RF=${RF:-1}
 export LOG_LEVEL="${LOG_LEVEL:-info}"
 export NUM_HISTORY_SHARDS=${NUM_HISTORY_SHARDS:-4}
@@ -153,24 +154,48 @@ init_env() {
 
     // this env variable is deprecated
     export BIND_ON_LOCALHOST=false
-
+    : '
+    Assign Ringpop endpoints to only those services which are initialied.
+    If SERVICES is empty, all endpoints are initialized.
+    '
     if [ -z "$RINGPOP_SEEDS" ]; then
-        export RINGPOP_SEEDS_JSON_ARRAY="[\"$HOST_IP:7933\",\"$HOST_IP:7934\",\"$HOST_IP:7935\",\"$HOST_IP:7939\"]"
+        if [ -z "$SERVICES" ]; then
+            export RINGPOP_SEEDS_JSON_ARRAY="[\"$HOST_IP:7933\",\"$HOST_IP:7934\",\"$HOST_IP:7935\",\"$HOST_IP:7939\"]"
+        else
+            export RINGPOP_SEEDS_JSON_ARRAY="["
+            if [[ $SERVICES == *"frontend"* ]]; then
+                RINGPOP_SEEDS_JSON_ARRAY="${RINGPOP_SEEDS_JSON_ARRAY}\"$HOST_IP:7933\","
+            fi
+            if [[ $SERVICES == *"matching"* ]]; then
+                RINGPOP_SEEDS_JSON_ARRAY="${RINGPOP_SEEDS_JSON_ARRAY}\"$HOST_IP:7934\","
+            fi 
+            if [[ $SERVICES == *"history"* ]]; then
+                RINGPOP_SEEDS_JSON_ARRAY="${RINGPOP_SEEDS_JSON_ARRAY}\"$HOST_IP:7935\","
+            fi 
+            if [[ $SERVICES == *"worker"* ]]; then
+                RINGPOP_SEEDS_JSON_ARRAY="${RINGPOP_SEEDS_JSON_ARRAY}\"$HOST_IP:7939\","
+            fi
+            RINGPOP_SEEDS_JSON_ARRAY="${RINGPOP_SEEDS_JSON_ARRAY:0:-1}]"
+        fi
     else
         array=(${RINGPOP_SEEDS//,/ })
         export RINGPOP_SEEDS_JSON_ARRAY=$(json_array "${array[@]}")
     fi
+
 }
 
 init_env
-#wait_for_db
-#if [ "$SKIP_SCHEMA_SETUP" != true ]; then
-#    setup_schema
-#fi
+wait_for_db
+if [ "$SKIP_SCHEMA_SETUP" != true ]; then
+    setup_schema
+fi
 
 # fix up config
 envsubst < config/$CFG_TEMPLATE > config/docker.yaml
-#./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES
-echo "hahahahahhahahahah"
-echo $RINGPOP_SEEDS_JSON_ARRAY
+./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES
+#echo "hahahahahhahahahah"
+#echo $RINGPOP_SEEDS_JSON_ARRAY
+#export SERVICES='frontend'
+
+
 
